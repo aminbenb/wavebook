@@ -7,10 +7,14 @@ const App = () => {
     const contractABI = abi.abi;
     const [allWaves, setAllWaves] = useState([]);
     const [currentAccount, setCurrentAccount] = useState("");
-    const contractAddress = "0xe70E6C9E56f3cf481Fb66e93B3F80be333C62f66";
+    const contractAddress = "0x06aD87c0007c6479C3f1b19f8214dE2032c43B74";
     const [counter, setCounter] = useState(0);
     const input = useRef();
 
+
+  const rickRoll = () => {
+    window.location.replace("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+  }
 
   const inputHandler = (event) => {
     input.current = event.target.value;
@@ -36,7 +40,6 @@ const App = () => {
                 const provider = new ethers.providers.Web3Provider(ethereum);
                 const wavePortalContract = new ethers.Contract(contractAddress,                     contractABI, provider);
                 console.log(wavePortalContract);
-                console.log("hoes");
                 try{
                   console.log("entering try branch");
                   const waveCount = await  wavePortalContract.getTotalWaves(); 
@@ -114,6 +117,11 @@ const App = () => {
     };
 
   const waveTwo = async () => {
+        const randomFloat = Math.random();
+        if(randomFloat < 0.2){
+          rickRoll();
+          return;
+        }
         try {
             const { ethereum } = window;
 
@@ -137,6 +145,7 @@ const App = () => {
                 await waveTxn.wait();
                 console.log("Mined -- ", waveTxn.hash);
                 count = await wavePortalContract.getTotalWaves();
+                setCounter(count.toNumber());
                 console.log("Retrieved total wave count...", count.toNumber());
             } else {
                 console.log("Ethereum object doesn't exist!");
@@ -161,6 +170,7 @@ const App = () => {
                         address: wave.waver,
                         timestamp: new Date(wave.timestamp * 1000),
                         message: wave.message,
+                        isWin: wave.isWin
                     };
                 });
 
@@ -175,9 +185,12 @@ const App = () => {
 
     useEffect( () => {
         checkIfWalletIsConnected();
+        getAllWaves()
     }, []);
 
     
+
+
     useEffect(() => {
         let wavePortalContract;
 
@@ -200,7 +213,6 @@ const App = () => {
             wavePortalContract = new ethers.Contract(contractAddress, contractABI, signer);
             wavePortalContract.on("NewWave", onNewWave);
         }
-
         return () => {
             if (wavePortalContract) {
                 wavePortalContract.off("NewWave", onNewWave);
@@ -218,8 +230,11 @@ const App = () => {
       <br/>
           Connect your Ethereum wallet, write a message, send a wave!
           <br/>
+          Each time you send a wave you have a 50% chance of winning some Rinkeby! 💯
+          <br/>
           <br/>
           Total Waves: {counter}
+          <br/>
           <br/>
                 </div>
                 {!currentAccount && (
@@ -228,17 +243,19 @@ const App = () => {
                     </button>
                 )}
                 <br/>
-                <input type="text" className="Write a Message" onChange={inputHandler}/>              
+                <input type="text" placeholder="Write a Message" onChange={inputHandler}/>              
                 <button className="waveButton" onClick={() => waveTwo()}>
                     Wave at Me
                 </button>
 
                 {allWaves.map((wave, index) => {
                     return (
-                        <div key={index} style={{ backgroundColor: "white", marginTop: "16px", padding: "8px" }}>
+                        <div key={index} className="message" style={{ marginTop: "16px"}}>
                             <div>Address: {wave.address}</div>
                             <div>Time: {wave.timestamp.toString()}</div>
                             <div>Message: {wave.message}</div>
+                            <div>Did you win the Rinkeby Lottery?: {wave.isWin ? "Yes! 😁" : "No 😔"}</div>
+                            <br/>
                         </div>
                     );
                 })}
